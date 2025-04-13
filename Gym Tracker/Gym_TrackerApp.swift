@@ -12,51 +12,52 @@ import ColorfulX
 @main
 struct Gym_TrackerApp: App {
     @State private var isDarkMode = UserSettings.shared.themeMode == .dark
+    @State private var workoutManager = WorkoutManager()
     
-    
+    init() {
+        loadAndGroupExercizes()
+    }
     
     var body: some Scene {
         WindowGroup {
-            
-            TabView {
-                    // Using ZStack approach for tab content to have independent gradients per tab
-                Tab {
+            ZStack(alignment: .top) {
+                TabView {
                     ContentView()
-                } label: {
-                    Label("GymTracker", systemImage: "house")
-                }
-                
-                Tab {
+                        .tabItem {
+                            Label("Home", systemImage: "house")
+                        }
+                    
+                    ActiveWorkoutView()
+                        .tabItem {
+                            Label("Workout", systemImage: "figure.run")
+                        }
+                    
                     LibraryView()
-                } label: {
-                    Label("Library", systemImage: "rectangle.stack")
-                }
-                
-                Tab {
+                        .tabItem {
+                            Label("Library", systemImage: "books.vertical")
+                        }
+                    
                     SettingsView()
-                } label: {
-                    Label("Settings", systemImage: "gear")
+                        .tabItem {
+                            Label("Settings", systemImage: "gear")
+                        }
                 }
                 
+                WorkoutBannerView()
             }
+            .environment(workoutManager)
             .preferredColorScheme(isDarkMode ? .dark : .light)
             .onAppear {
                 setupThemeChangeListener()
-                loadAndGroupExercizes()
             }
-            
         }
-        
         .modelContainer(for: [BookmarkEntity.self], isAutosaveEnabled: true)
     }
-    
-
     
     func setupThemeChangeListener() {
         NotificationCenter.default.addObserver(forName: NSNotification.Name("ThemeChanged"), object: nil, queue: .main) { _ in
             isDarkMode = UserSettings.shared.themeMode == .dark
         }
     }
-    
 }
 

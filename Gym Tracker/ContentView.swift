@@ -10,51 +10,25 @@ import ColorfulX
 
 struct ContentView: View {
     @State private var name = SettingsView.getName()
-    @State private var workoutManager = WorkoutManager()
     
     var body: some View {
-        ZStack(alignment: .top) {
-            TabView {
-                NavigationStack {
-                    ZStack {
-                        GradientBackgroundView.random()
-                        
-                        VStack {
-                            Text("Hello, \(name)")
-                                .font(.largeTitle)
-                                .padding()
-                                .background(.ultraThinMaterial)
-                                .cornerRadius(10)
-                        }
-                    }
-                    .onAppear {
-                        name = ContentView.getName()
-                    }
-                    .navigationTitle("GymTracker")
+        NavigationStack {
+            ZStack {
+                GradientBackgroundView.random()
+                
+                VStack {
+                    Text("Hello, \(name)")
+                        .font(.largeTitle)
+                        .padding()
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(10)
                 }
-                .tabItem {
-                    Label("Home", systemImage: "house")
-                }
-                
-                ActiveWorkoutView()
-                    .tabItem {
-                        Label("Workout", systemImage: "figure.run")
-                    }
-                
-                LibraryView()
-                    .tabItem {
-                        Label("Library", systemImage: "books.vertical")
-                    }
-                
-                SettingsView()
-                    .tabItem {
-                        Label("Settings", systemImage: "gear")
-                    }
             }
-            
-            WorkoutBannerView()
+            .onAppear {
+                name = ContentView.getName()
+            }
+            .navigationTitle("GymTracker")
         }
-        .environment(workoutManager)
     }
     
     static func getName() -> String {
