@@ -1,0 +1,227 @@
+//
+    //  SettingsView.swift
+    //  Gym Tracker
+    //
+    //  Created by Adon Omeri on 12/4/2025.
+    //
+
+import SwiftUI
+import SwiftData
+import ColorfulX
+
+struct SettingsView: View {
+    
+    @State private var isDarkMode = SettingsView.isDarkModeEnabled()
+    @State private var units = SettingsView.getUnits()
+    @State private var name = SettingsView.getName()
+    
+        // Alert state variables
+    @State private var showResetSettingsAlert = false
+    @State private var showDeleteDataAlert = false
+    @State private var showResetAllAlert = false
+    
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                    // Add the gradient background
+                GradientBackgroundView.random()
+                
+                VStack {
+                    
+                    Spacer()
+                        .frame(height: 15)
+                    
+                    List {
+                        
+                        Section {
+                            Toggle("Dark Mode", systemImage: "circle.lefthalf.filled", isOn: $isDarkMode)
+                                .onChange(of: isDarkMode) { oldValue, newValue in
+                                    let settings = UserSettings.shared
+                                    settings.themeMode = newValue ? .dark : .light
+                                    
+                                        // Apply the theme immediately
+                                    applyCurrentTheme()
+                                }
+                            
+                        }
+                        .listRowBackground(UltraThinView())
+                        
+                        
+                        
+                        Section {
+                            
+                            HStack {
+                                Image(systemName: "person.fill")
+                                    .foregroundStyle(.blue)
+                                    .imageScale(.large)
+                                
+                                TextField("First Name", text: $name)
+                                    .autocorrectionDisabled()
+                                    .onChange(of: name) { oldValue, newValue in
+                                        let settings = UserSettings.shared
+                                        settings.firstName = newValue
+                                    }
+                                
+                            }
+                            
+                        }
+                        .listRowBackground(UltraThinView())
+                        
+                        
+                        
+                        Section {
+                            Picker(selection: $units, label: Label("Units", systemImage: "ruler")) {
+                                Text("Metric").tag(MeasurementUnit.metric)
+                                Text("Imperial").tag(MeasurementUnit.imperial)
+                            }
+                            .pickerStyle(.menu)
+                            .onChange(of: units) { oldValue, newValue in
+                                let settings = UserSettings.shared
+                                settings.preferredUnits = newValue
+                            }
+                        }
+                        .listRowBackground(UltraThinView())
+                        
+                        
+                        Section {
+                            
+                            Button {
+                                showResetSettingsAlert = true
+                            } label: {
+                                Label("Reset All Settings", systemImage: "trash")
+                                    .foregroundColor(.red)
+                            }
+                            .alert("Reset Settings", isPresented: $showResetSettingsAlert) {
+                                Button("Cancel", role: .cancel) {}
+                                Button("Reset", role: .destructive) {
+                                    UserSettings.shared.resetAllSettings()
+                                }
+                            } message: {
+                                Text("Are you sure you want to reset all settings to default values?")
+                            }
+                            
+                            Button {
+                                showDeleteDataAlert = true
+                            } label: {
+                                Label("Delete All Data", systemImage: "trash")
+                                    .foregroundColor(.red)
+                            }
+                            .alert("Delete All Data", isPresented: $showDeleteDataAlert) {
+                                Button("Cancel", role: .cancel) {}
+                                Button("Delete", role: .destructive) {
+                                    resetAllData()
+                                }
+                            } message: {
+                                Text("Are you sure you want to delete all workout data? This action cannot be undone.")
+                            }
+                            
+                            Button {
+                                showResetAllAlert = true
+                            } label: {
+                                Label("Reset & Delete All", systemImage: "trash")
+                                    .foregroundColor(.red)
+                                    .bold()
+                            }
+                            .alert("Reset Everything", isPresented: $showResetAllAlert) {
+                                Button("Cancel", role: .cancel) {}
+                                Button("Reset Everything", role: .destructive) {
+                                    resetAllData()
+                                    UserSettings.shared.resetAllSettings()
+                                }
+                            } message: {
+                                Text("Are you sure you want to reset all settings and delete all data? This action cannot be undone.")
+                            }
+                            
+                        }
+                        
+                        .listRowBackground(UltraThinView())
+                        
+                        
+                        
+                        .tint(.red)
+                        
+                        
+                    }
+                    .scrollContentBackground(.hidden) // Make form background transparent
+                }
+                .scrollIndicators(.hidden)
+                .scrollBounceBehavior(.basedOnSize)
+                
+                
+            }
+            .navigationTitle("Settings")
+            .onAppear {
+                    // Make sure the UI reflects the current settings when view appears
+                isDarkMode = SettingsView.isDarkModeEnabled()
+                units = SettingsView.getUnits()
+                name = SettingsView.getName()
+            }
+        }
+    }
+    
+        // Function to reset all SwiftData content
+    private func resetAllData() {
+            // Access the ModelContainer for your app
+        guard let modelContainer = try? ModelContainer(for: Exercize.self, ExercizeSet.self, ExercizeGroupStruct.self, Workout.self) else {
+            print("Failed to access model container")
+            return
+        }
+        
+        let context = modelContainer.mainContext
+        
+            // Batch delete all entities (repeat for each model type)
+        do {
+            try context.delete(model: Exercize.self)
+            try context.delete(model: ExercizeGroupStruct.self)
+            try context.delete(model: ExercizeSet.self)
+            try context.delete(model: Workout.self)
+            
+                // Save changes
+            try context.save()
+        } catch {
+            print("Failed to delete data: \(error.localizedDescription)")
+        }
+    }
+    
+        // Apply current theme to the app
+    private func applyCurrentTheme() {
+            // Set the app's color scheme based on the selected theme
+        DispatchQueue.main.async {
+                // This is where you would typically set the app's appearance
+                // In SwiftUI, this is often done at the app level with preferredColorScheme
+                // But we can notify through NotificationCenter for app-wide changes
+            NotificationCenter.default.post(name: NSNotification.Name("ThemeChanged"), object: nil)
+        }
+    }
+    
+    static func isDarkModeEnabled() -> Bool {
+        let settings = UserSettings.shared
+        return settings.themeMode == .dark
+    }
+    
+    static func getUnits() -> MeasurementUnit {
+        let settings = UserSettings.shared
+        return settings.preferredUnits
+    }
+    
+    static func getName() -> String {
+        let settings = UserSettings.shared
+        return settings.firstName
+    }
+    
+}
+
+#Preview {
+    SettingsView()
+}
+
+
+struct UltraThinView: View {
+    var body: some View {
+        ZStack {
+            Color.clear
+                .background(.ultraThinMaterial)
+        }
+    }
+}
