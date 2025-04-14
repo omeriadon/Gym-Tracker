@@ -166,54 +166,7 @@ struct SettingsView: View {
                         }
                         .listRowBackground(ColorfulView(color: $colours, speed: $speed, noise: $noise))
 
-                        Section {
-                            ForEach(completedWorkouts) { workout in
-                                Button(action: {
-                                    selectedWorkout = workout
-                                    showEditWorkoutSheet = true
-                                }) {
-                                    HStack {
-                                        Text(workout.name)
-                                        Spacer()
-                                        Text(workout.date, style: .date)
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                            }
-                        }
-                        .listRowBackground(UltraThinView())
-                        .sheet(isPresented: $showEditWorkoutSheet) {
-                            if let workout = selectedWorkout {
-                                NavigationStack {
-                                    VStack {
-                                        TextField("Workout Name", text: Binding(
-                                            get: { workout.name },
-                                            set: { workout.name = $0 }
-                                        ))
-                                        .textFieldStyle(.roundedBorder)
 
-                                        TextEditor(text: Binding(
-                                            get: { workout.notes },
-                                            set: { workout.notes = $0 }
-                                        ))
-                                        .frame(height: 200)
-                                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
-
-                                        Button("Save") {
-                                            do {
-                                                try modelContext.save()
-                                                showEditWorkoutSheet = false
-                                            } catch {
-                                                print("Failed to save workout: \(error.localizedDescription)")
-                                            }
-                                        }
-                                        .buttonStyle(.borderedProminent)
-                                    }
-                                    .padding()
-                                    .navigationTitle("Edit Workout")
-                                }
-                            }
-                        }
                         
                     }
                     .scrollContentBackground(.hidden) // Make form background transparent
