@@ -154,7 +154,8 @@ struct SettingsView: View {
                                 showCredits = true
                             } label: {
                                 Label("Credits", systemImage: "star")
-                                    .foregroundStyle(.black)
+                                    .foregroundStyle(.white)
+                                    .bold()
                             }
 
                         }
