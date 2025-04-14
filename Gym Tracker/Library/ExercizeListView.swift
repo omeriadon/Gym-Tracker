@@ -13,7 +13,7 @@ struct ExercizeListView: View {
     @State private var isSearchActive = true
     @State private var selectedTokens: [SearchToken] = []
     @Environment(\.modelContext) private var modelContext
-    @Query var bookmarks: [BookmarkEntity]
+    @Query var bookmarks: [Bookmark]
     
     var suggestedTokens: [SearchToken] {
         var tokens = allExercizes.commonGroups(limit: Int.max).map { SearchToken.category(ExercizeToken(rawValue: $0) ?? .other) }

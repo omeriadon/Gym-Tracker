@@ -55,6 +55,7 @@ struct LibraryView: View {
                             } label: {
                                 Label("Bookmarks", systemImage: "bookmark")
                                     .frame(height: 40)
+
                             }
                             
                         }

@@ -9,62 +9,42 @@ import SwiftUI
 import SwiftData
 
 struct ExercizeDetailView: View {
-    
     var exercize: Exercize
     @Environment(\.modelContext) private var modelContext
-    @Query private var bookmarkedItems: [BookmarkEntity]
+    @Query private var bookmarkedItems: [Bookmark]
     @State private var isBookmarked: Bool = false
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
                 // Add the gradient background
                 GradientBackgroundView.random()
-                
+
                 VStack {
-                    
                     Spacer()
                         .frame(height: 15)
-                    
-                    
+
                     List {
-                        
-                        
                         Section {
-                            
                             Text(exercize.muscle)
-                            
-                            
                         } header: {
-                            
                             Label("Muscle", systemImage: "figure")
-                            
                         }
                         .listRowBackground(UltraThinView())
-                        
-                        
+
                         Section {
-                            
                             NavigationLink(exercize.group, destination: ExercizeGroupDetailView(name: exercize.group))
-                            
-                            
                         } header: {
-                            
                             Label("Muscle Group", systemImage: "square.2.layers.3d")
-                            
                         }
                         .listRowBackground(UltraThinView())
-                        
-                        
+
                         Section {
                             ForEach(exercize.notes, id: \.self) { note in
                                 Text(note)
                             }
-                            
                         } header: {
-                            
                             Label("Instructions", systemImage: "book")
-                            
                         }
                         .listRowBackground(UltraThinView())
                     }
@@ -76,11 +56,9 @@ struct ExercizeDetailView: View {
             .navigationTitle(exercize.name)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    bookmarkButton(
-                        name: exercize.name,
-                        type: .exercise,
-                        modelContext: modelContext
-                    )
+                    Button(action: toggleBookmark) {
+                        Label("Bookmark", systemImage: isBookmarked ? "bookmark.fill" : "bookmark")
+                    }
                 }
             }
             .onAppear {
@@ -88,25 +66,25 @@ struct ExercizeDetailView: View {
             }
         }
     }
-    
+
     private func checkIfBookmarked() {
         isBookmarked = bookmarkedItems.contains { item in
             item.name == exercize.name && item.type == BookmarkType.exercise.rawValue
         }
     }
-    
+
     private func toggleBookmark() {
         if isBookmarked {
             // Remove bookmark
-            if let bookmarkToDelete = bookmarkedItems.first(where: { 
-                $0.name == exercize.name && $0.type == BookmarkType.exercise.rawValue 
+            if let bookmarkToDelete = bookmarkedItems.first(where: {
+                $0.name == exercize.name && $0.type == BookmarkType.exercise.rawValue
             }) {
                 modelContext.delete(bookmarkToDelete)
                 try? modelContext.save()
             }
         } else {
             // Add bookmark
-            let newBookmark = BookmarkEntity(name: exercize.name, type: BookmarkType.exercise.rawValue)
+            let newBookmark = Bookmark(name: exercize.name, type: BookmarkType.exercise.rawValue)
             modelContext.insert(newBookmark)
             do {
                 try modelContext.save()
@@ -114,10 +92,9 @@ struct ExercizeDetailView: View {
                 print("ERROR SAVING: \(error.localizedDescription)")
             }
         }
-        
+
         // Update state
         isBookmarked.toggle()
-        
     }
 }
 

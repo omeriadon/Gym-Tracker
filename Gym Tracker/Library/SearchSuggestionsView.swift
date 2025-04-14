@@ -40,7 +40,14 @@ struct SearchSuggestionsView: View {
                             }
                         }
                     }
-
+                    
+                    Section("Other") {
+                        Button {
+                            selectedTokens.append(.bookmarked)
+                        } label: {
+                            Label("Bookmarked", systemImage: "bookmark.fill")
+                        }
+                    }
                 }
             } else {
                 VStack {
@@ -77,7 +84,21 @@ struct SearchSuggestionsView: View {
                             }
                         }
                     }
-
+                    
+                    // Show bookmarked option if text matches
+                    if "bookmarked".contains(searchText.lowercased()) {
+                        Section("Other") {
+                            Button {
+                                if BookmarkManager.shared.isBookmarked(name: "Bookmarked", type: .exercise) {
+                                    BookmarkManager.shared.removeBookmark(name: "Bookmarked", type: .exercise)
+                                } else {
+                                    BookmarkManager.shared.addBookmark(name: "Bookmarked", type: .exercise)
+                                }
+                            } label: {
+                                Label("Bookmarked", systemImage: BookmarkManager.shared.isBookmarked(name: "Bookmarked", type: .exercise) ? "bookmark.fill" : "bookmark")
+                            }
+                        }
+                    }
                 }
             }
         }

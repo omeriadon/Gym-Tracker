@@ -47,7 +47,7 @@ enum SearchToken: Hashable, Identifiable {
 
 // Extension with helper functions for search functionality
 extension Array where Element == Exercize {
-    func filtered(by tokens: [SearchToken], searchText: String, bookmarks: [BookmarkEntity]? = nil) -> [Exercize] {
+    func filtered(by tokens: [SearchToken], searchText: String, bookmarks: [Bookmark]? = nil) -> [Exercize] {
         if searchText.isEmpty && tokens.isEmpty {
             return self
         }

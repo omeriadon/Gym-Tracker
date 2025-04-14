@@ -8,7 +8,7 @@ enum BookmarkType: String, Codable {
 }
 
 @Model
-class BookmarkEntity {
+class Bookmark {
     var id: UUID
     var name: String
     var type: String
@@ -22,179 +22,157 @@ class BookmarkEntity {
     }
 }
 
+class BookmarkManager {
+    static let shared = BookmarkManager()
+    @Environment(\.modelContext) private var modelContext
+
+    func addBookmark(name: String, type: BookmarkType) {
+        let bookmark = Bookmark(name: name, type: type.rawValue)
+        BookmarkStorage.shared.saveBookmark(bookmark)
+    }
+
+    func removeBookmark(name: String, type: BookmarkType) {
+        BookmarkStorage.shared.deleteBookmark(name: name, type: type)
+    }
+
+    @MainActor func isBookmarked(name: String, type: BookmarkType) -> Bool {
+        return BookmarkStorage.shared.isBookmarked(name: name, type: type)
+    }
+}
+
+class BookmarkStorage {
+    static let shared = BookmarkStorage()
+
+    private init() {}
+
+    func saveBookmark(_ bookmark: Bookmark) {
+        Task { @MainActor in
+            do {
+                let modelContainer = try ModelContainer(for: Bookmark.self)
+                let context = modelContainer.mainContext
+
+                context.insert(bookmark)
+                try context.save()
+                print("Bookmark saved successfully: \(bookmark.name)")
+            } catch {
+                print("Failed to save bookmark: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func deleteBookmark(name: String, type: BookmarkType) {
+        Task { @MainActor in
+            do {
+                let modelContainer = try ModelContainer(for: Bookmark.self)
+                let context = modelContainer.mainContext
+
+                let fetchDescriptor = FetchDescriptor<Bookmark>(predicate: #Predicate { $0.name == name && $0.type == type.rawValue })
+                if let bookmark = try context.fetch(fetchDescriptor).first {
+                    context.delete(bookmark)
+                    try context.save()
+                    print("Bookmark deleted successfully: \(name)")
+                }
+            } catch {
+                print("Failed to delete bookmark: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    @MainActor func isBookmarked(name: String, type: BookmarkType) -> Bool {
+        do {
+            let modelContainer = try ModelContainer(for: Bookmark.self)
+            let context = modelContainer.mainContext
+
+            let fetchDescriptor = FetchDescriptor<Bookmark>(predicate: #Predicate { $0.name == name && $0.type == type.rawValue })
+            return try !context.fetch(fetchDescriptor).isEmpty
+        } catch {
+            print("Failed to check bookmark: \(error.localizedDescription)")
+            return false
+        }
+    }
+}
+
 struct BookmarksView: View {
-    @Query private var bookmarkedItems: [BookmarkEntity]
-    @State private var searchText: String = ""
-    
+    @Environment(\.modelContext) private var modelContext
+    @Query private var bookmarks: [Bookmark]
+
     var body: some View {
         NavigationStack {
             ZStack {
-                // Add the gradient background
                 GradientBackgroundView.random()
-                
+
                 VStack {
                     Spacer()
                         .frame(height: 15)
-                    
-                    List {
-                        if bookmarkedItems.isEmpty {
-                            Section {
-                                VStack(alignment: .center, spacing: 10) {
-                                    Image(systemName: "bookmark.slash")
-                                        .font(.system(size: 50))
-                                        .foregroundColor(.gray)
-                                        .padding(.top, 20)
-                                    
-                                    Text("No Bookmarks")
-                                        .font(.headline)
-                                    
-                                    Text("Bookmark exercises and groups to see them here.")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                        .multilineTextAlignment(.center)
-                                        .padding(.horizontal)
-                                        .padding(.bottom, 20)
-                                }
-                                .frame(maxWidth: .infinity)
-                            }
-                            .listRowBackground(UltraThinView())
-                        } else {
-                            // Group bookmarks
-                            let groupBookmarks = filteredBookmarks.filter { 
-                                $0.type == BookmarkType.exerciseGroup.rawValue 
-                            }
-                            
+
+                    if bookmarks.isEmpty {
+                        Text("No Bookmarks")
+                            .foregroundColor(.secondary)
+                    } else {
+                        List {
+                            // Exercise Groups Section
+                            let groupBookmarks = bookmarks.filter { $0.type == BookmarkType.exerciseGroup.rawValue }
                             if !groupBookmarks.isEmpty {
-                                Section {
+                                Section("Groups") {
                                     ForEach(groupBookmarks) { bookmark in
                                         NavigationLink(destination: ExercizeGroupDetailView(name: bookmark.name)) {
-                                            let group = exerciseGroups.first { $0.name == bookmark.name }
-                                            HStack {
-                                                Image(systemName: "folder.fill")
-                                                    .foregroundColor(group?.themeColour.swiftUIColor ?? .blue)
+                                            Text(bookmark.name)
+                                        }
+                                    }
+                                }
+                                .listRowBackground(UltraThinView())
+
+                            }
+
+                            // Exercises Section
+                            let exerciseBookmarks = bookmarks.filter { $0.type == BookmarkType.exercise.rawValue }
+                            if !exerciseBookmarks.isEmpty {
+                                Section("Exercises") {
+                                    ForEach(exerciseBookmarks) { bookmark in
+                                        if let exercise = allExercizes.first(where: { $0.name == bookmark.name }) {
+                                            NavigationLink(destination: ExercizeDetailView(exercize: exercise)) {
                                                 Text(bookmark.name)
                                             }
                                         }
                                     }
-                                } header: {
-                                    Label("Bookmarked Groups", systemImage: "square.stack.fill")
                                 }
                                 .listRowBackground(UltraThinView())
-                            }
-                            
-                            // Exercise bookmarks
-                            let exerciseBookmarks = filteredBookmarks.filter { 
-                                $0.type == BookmarkType.exercise.rawValue 
-                            }
-                            
-                            if !exerciseBookmarks.isEmpty {
-                                Section {
-                                    ForEach(exerciseBookmarks) { bookmark in
-                                        if let exercise = allExercizes.first(where: { $0.name == bookmark.name }) {
-                                            NavigationLink(destination: ExercizeDetailView(exercize: exercise)) {
-                                                VStack(alignment: .leading) {
-                                                    Text(bookmark.name)
-                                                        .font(.headline)
-                                                    Text(exercise.group)
-                                                        .font(.caption)
-                                                        .foregroundColor(.secondary)
-                                                }
-                                            }
-                                        }
-                                    }
-                                } header: {
-                                    Label("Bookmarked Exercises", systemImage: "dumbbell.fill")
-                                }
-                                .listRowBackground(UltraThinView())
+
                             }
                         }
+                        .scrollContentBackground(.hidden)
                     }
-                    .scrollContentBackground(.hidden)
                 }
                 .scrollIndicators(.hidden)
                 .scrollBounceBehavior(.basedOnSize)
             }
             .navigationTitle("Bookmarks")
-            .searchable(text: $searchText, prompt: "Search bookmarks")
-        }
-    }
-    
-    private var filteredBookmarks: [BookmarkEntity] {
-        if searchText.isEmpty {
-            return bookmarkedItems
-        } else {
-            return bookmarkedItems.filter {
-                $0.name.lowercased().contains(searchText.lowercased())
-            }
         }
     }
 }
 
+struct BookmarkButton: View {
+    @Environment(\.modelContext) private var modelContext
+    @State private var isBookmarked: Bool
+    let name: String
+    let type: BookmarkType
 
+    init(name: String, type: BookmarkType) {
+        self.name = name
+        self.type = type
+        _isBookmarked = State(initialValue: BookmarkManager.shared.isBookmarked(name: name, type: type))
+    }
 
-// Extension to provide bookmark functionality
-extension View {
-    func bookmarkButton(
-        name: String,
-        type: BookmarkType,
-        modelContext: ModelContext
-    ) -> some View {
-        let isBookmarked = checkIsBookmarked(name: name, type: type, modelContext: modelContext)
-        
-        return Button {
-            if (isBookmarked) {
-                removeBookmark(name: name, type: type, modelContext: modelContext)
+    var body: some View {
+        Button {
+            if isBookmarked {
+                BookmarkManager.shared.removeBookmark(name: name, type: type)
             } else {
-                addBookmark(name: name, type: type, modelContext: modelContext)
+                BookmarkManager.shared.addBookmark(name: name, type: type)
             }
+            isBookmarked.toggle()
         } label: {
             Label("Bookmark", systemImage: isBookmarked ? "bookmark.fill" : "bookmark")
-        }
-    }
-    
-    // Check if item is bookmarked
-    private func checkIsBookmarked(name: String, type: BookmarkType, modelContext: ModelContext) -> Bool {
-        let predicate = #Predicate<BookmarkEntity> { 
-            $0.name == name && $0.type == type.rawValue 
-        }
-        let descriptor = FetchDescriptor<BookmarkEntity>(predicate: predicate)
-        
-        do {
-            let results = try modelContext.fetch(descriptor)
-            return !results.isEmpty
-        } catch {
-            print("Error checking bookmark: \(error)")
-            return false
-        }
-    }
-    
-    // Add a bookmark
-    private func addBookmark(name: String, type: BookmarkType, modelContext: ModelContext) {
-        let bookmark = BookmarkEntity(name: name, type: type.rawValue)
-        modelContext.insert(bookmark)
-        
-        do {
-            try modelContext.save()
-        } catch {
-            print("Error saving bookmark: \(error)")
-        }
-    }
-    
-    // Remove a bookmark
-    private func removeBookmark(name: String, type: BookmarkType, modelContext: ModelContext) {
-        let predicate = #Predicate<BookmarkEntity> { 
-            $0.name == name && $0.type == type.rawValue 
-        }
-        let descriptor = FetchDescriptor<BookmarkEntity>(predicate: predicate)
-        
-        do {
-            let results = try modelContext.fetch(descriptor)
-            for bookmark in results {
-                modelContext.delete(bookmark)
-            }
-            try modelContext.save()
-        } catch {
-            print("Error removing bookmark: \(error)")
         }
     }
 }

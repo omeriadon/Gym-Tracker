@@ -60,7 +60,7 @@ struct Gym_TrackerApp: App {
                 setupThemeChangeListener()
             }
         }
-        .modelContainer(for: [Workout.self, Exercize.self, ExercizeSet.self]) // Ensure the Workout model is part of the container
+        .modelContainer(for: [Workout.self, Exercize.self, ExercizeSet.self, Bookmark.self]) // Ensure the Workout model is part of the container
     }
     
     func setupThemeChangeListener() {
