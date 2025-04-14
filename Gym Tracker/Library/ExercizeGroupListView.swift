@@ -22,10 +22,10 @@ struct ExerciseGroupListView: View {
                     // Add the gradient background
                 GradientBackgroundView.random()
                 
+                
                 VStack {
-                    
                     Spacer()
-                        .frame(height: 15)
+                        .frame(height: 5)
                     
                     
                     List(exerciseGroups, id: \.id) { exercizeGroup in
@@ -47,13 +47,17 @@ struct ExerciseGroupListView: View {
                         
                         
                     }
-                    .scrollContentBackground(.hidden)
                     
                 }
+                .scrollContentBackground(.hidden)
+                
+                
+                
                 .scrollIndicators(.hidden)
                 .scrollBounceBehavior(.basedOnSize)
                 
             }
+
             .navigationTitle("Exercize Groups")
         }
     }

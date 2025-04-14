@@ -22,6 +22,15 @@ struct SettingsView: View {
     
     @Query var completedWorkouts: [Workout]
     
+    @State var showCredits = false
+    
+    
+    @State var colours: [Color] = [Color.green, Color.red, Color.blue, Color.teal, Color.cyan, Color.orange]
+    
+    @State var speed: Double = 1
+    
+    @State var noise: Double = 20
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -136,20 +145,104 @@ struct SettingsView: View {
                             }
                             
                         }
-                        
                         .listRowBackground(UltraThinView())
-                        
-                        
-                        
                         .tint(.red)
+                        
+                        
+                        Section {
+                            Button {
+                                showCredits = true
+                            } label: {
+                                Label("Credits", systemImage: "star")
+                                    .foregroundStyle(.black)
+                            }
+
+                        }
+                        .listRowBackground(ColorfulView(color: $colours, speed: $speed, noise: $noise))
+
                         
                         
                     }
                     .scrollContentBackground(.hidden) // Make form background transparent
                 }
-                .scrollIndicators(.hidden)
-                .scrollBounceBehavior(.basedOnSize)
-                
+                .sheet(isPresented: $showCredits) {
+                    
+                    ZStack {
+                        
+                        ColorfulView(color: $colours, speed: $speed, noise: $noise)
+                            .opacity(0.2)
+                            .ignoresSafeArea()
+                        
+                        NavigationStack {
+                            
+                            
+                            Spacer()
+                                .frame(height: 15)
+                            
+                            
+                            List {
+                                
+                                Section {
+                                    
+
+                                    Link(destination: URL(string: "https://github.com/Lakr233/ColorfulX")!) {
+                                        HStack {
+                                            Text("Animated gradients")
+                                                .foregroundStyle(.white)
+
+                                            Spacer()
+                                            Text("ColorfulX")
+                                            Image(systemName: "arrow.up.right.square")
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        .padding(.vertical, 12)
+                                    }
+
+
+
+
+                                }
+                                .listRowBackground(UltraThinView())
+                                
+                                
+                                Section {
+                                    Link(destination: URL(string: "https://github.com/yuhonas/free-exercise-db/tree/main?tab=readme-ov-file")!) {
+                                        HStack {
+                                            Text("Exercize Database (Edited)")
+                                                .foregroundStyle(.white)
+                                            
+                                            Spacer()
+                                            Text("free-exercise-db")
+                                            Image(systemName: "arrow.up.right.square")
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        .padding(.vertical, 12)
+                                    }
+                                }
+                                
+                                .listRowBackground(UltraThinView())
+                            }
+                            .scrollContentBackground(.hidden) // Make form background transparent
+                            .navigationTitle("Credits")
+                            .toolbar {
+                                Button(role: .cancel) {
+                                    showCredits = false
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.gray)
+                                }
+                                
+                            }
+                        }
+
+                        .presentationDetents([.large])
+                        .presentationCornerRadius(30)
+                        .presentationBackground(content: { UltraThinView() })
+                    }
+                    
+                    .scrollIndicators(.hidden)
+                    .scrollBounceBehavior(.basedOnSize)
+                }
                 
             }
             .navigationTitle("Settings")
