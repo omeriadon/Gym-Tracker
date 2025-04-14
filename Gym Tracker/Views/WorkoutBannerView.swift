@@ -2,7 +2,7 @@ import SwiftUI
 import ColorfulX
 
 struct WorkoutBannerView: View {
-    @Environment(WorkoutManager.self) private var workoutManager
+    @EnvironmentObject private var workoutManager: WorkoutManager
     @State private var isAppearing = false
     
     var body: some View {
@@ -19,12 +19,12 @@ struct WorkoutBannerView: View {
                             
                             Spacer()
                             
-                            withAnimation(.default) {
-                                Text(formatDuration(workout.duration))
-                                    .font(.system(.subheadline, design: .monospaced))
-                                    .foregroundStyle(.primary)
-                                    .contentTransition(.numericText())
-                            }
+                            Text(formatDuration(workout.duration))
+                                .font(.system(.subheadline, design: .monospaced))
+                                .foregroundStyle(.primary)
+                                .contentTransition(.numericText())
+                                .animation(.default, value: workout.duration)
+                            
                             
                             
                             Button {

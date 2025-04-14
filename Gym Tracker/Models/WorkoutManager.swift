@@ -3,21 +3,32 @@ import ActivityKit
 import SwiftUI
 import SwiftData
 
-@Observable
-class WorkoutManager {
-    var activeWorkout: Workout?
-    var workoutStartTime: Date?
+class WorkoutManager: ObservableObject {
+    @Published var activeWorkout: Workout?
+    @Published var workoutStartTime: Date?
     private var appTimer: Timer?
     private var liveActivityTimer: Timer?
     private var liveActivity: Activity<WorkoutAttributes>?
-
-
-
+    
     init() {
-        // Initialize any needed properties
+        // Check if there's an active workout when initializing
+        if let existingWorkout = WorkoutStorage.shared.activeWorkout, existingWorkout.isActive {
+            self.activeWorkout = existingWorkout
+            self.workoutStartTime = existingWorkout.date
+            startTimers()
+            
+            if ActivityAuthorizationInfo().areActivitiesEnabled {
+                startLiveActivity(workout: existingWorkout)
+            }
+        }
     }
     
-    func startWorkout(name: String = "New Workout") {
+    @MainActor func startWorkout(name: String = "New Workout") {
+        // End any existing workout first
+        if activeWorkout != nil {
+            endWorkout()
+        }
+        
         let workout = Workout(
             id: UUID(),
             name: name,
@@ -36,32 +47,62 @@ class WorkoutManager {
         if ActivityAuthorizationInfo().areActivitiesEnabled {
             startLiveActivity(workout: workout)
         }
+        
+        WorkoutStorage.shared.activeWorkout = workout
+        WorkoutStorage.shared.saveWorkoutState()
     }
     
     @MainActor func endWorkout() {
-        guard let workout = activeWorkout else { return }
+        guard let workout = activeWorkout, workout.isActive else {
+            print("No active workout to end or workout already inactive.")
+            return
+        }
 
         // Ensure the duration is set correctly before ending the workout
         workout.duration = Date().timeIntervalSince(workoutStartTime ?? Date())
+        workout.isActive = false
         
-        // Save using WorkoutStorage which creates a new instance
-        WorkoutStorage.shared.saveWorkout(workout)
+        // Save the workout first before clearing state
+        WorkoutStorage.shared.insertWorkout(workout)
 
-        activeWorkout?.isActive = false
+        // Clear state
         activeWorkout = nil
         workoutStartTime = nil
+        WorkoutStorage.shared.clearActiveWorkout()
 
+        // Clean up timers
         appTimer?.invalidate()
         appTimer = nil
         liveActivityTimer?.invalidate()
         liveActivityTimer = nil
 
-        if let _ = liveActivity {
+        if liveActivity != nil {
             endLiveActivity()
         }
     }
     
-    private func startTimers() {
+    func discardWorkout() {
+        guard let workout = activeWorkout else { return }
+        
+        // If there's a live activity, end it
+        if liveActivity != nil {
+            endLiveActivity()
+        }
+        
+        // Clean up timers
+        appTimer?.invalidate()
+        appTimer = nil
+        liveActivityTimer?.invalidate()
+        liveActivityTimer = nil
+        
+        // Clear state
+        activeWorkout = nil
+        workoutStartTime = nil
+        WorkoutStorage.shared.clearActiveWorkout()
+        WorkoutStorage.shared.deleteWorkout(workout)
+    }
+
+    func startTimers() {
         // App timer updates every second
         appTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self,
@@ -82,7 +123,7 @@ class WorkoutManager {
         }
     }
     
-    private func startLiveActivity(workout: Workout) {
+    func startLiveActivity(workout: Workout) {
         let attributes = WorkoutAttributes(
             workoutName: workout.name,
             workoutId: workout.id
@@ -108,7 +149,7 @@ class WorkoutManager {
         }
     }
     
-    private func updateLiveActivity(duration: TimeInterval) {
+    func updateLiveActivity(duration: TimeInterval) {
         guard let liveActivity = liveActivity,
               let workout = activeWorkout else { return }
         
@@ -124,7 +165,7 @@ class WorkoutManager {
         }
     }
     
-    private func endLiveActivity() {
+    func endLiveActivity() {
         guard let liveActivity = liveActivity,
               let workout = activeWorkout else { return }
         
@@ -137,7 +178,7 @@ class WorkoutManager {
         
         Task {
             await liveActivity.end(ActivityContent(state: finalState, staleDate: nil),
-                                 dismissalPolicy: .default)
+                                   dismissalPolicy: .immediate)
         }
         
         self.liveActivity = nil

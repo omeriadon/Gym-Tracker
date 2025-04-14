@@ -11,7 +11,7 @@ import SwiftData
 
 struct ContentView: View {
     @State var name = SettingsView.getName()
-    @Environment(WorkoutManager.self) private var workoutManager
+    @EnvironmentObject private var workoutManager: WorkoutManager
     @Query var completedWorkouts: [Workout]
 
     var lastThreeWorkouts: [Workout] {

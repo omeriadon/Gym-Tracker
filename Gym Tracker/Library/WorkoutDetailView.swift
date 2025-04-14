@@ -11,9 +11,11 @@ import SwiftData
 struct WorkoutDetailView: View {
     var workout: Workout
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @State private var name: String
     @State private var notes: String
     @State private var isBookmarked: Bool = false
+    @State private var showDeleteAlert = false
 
     init(workout: Workout) {
         self.workout = workout
@@ -32,11 +34,38 @@ struct WorkoutDetailView: View {
 
                     List {
                         Section {
-                            TextField("Workout Name", text: $name, onCommit: saveName)
+                            TextField("Workout Name", text: $name)
+                                .onChange(of: name) {
+                                    saveName() }
                         } header: {
                             Label("Name", systemImage: "pencil")
                         }
                         .listRowBackground(UltraThinView())
+                        
+                        Section {
+                            Text(formatDuration(workout.duration))
+                                .monospacedDigit()
+                            Text(workout.date.formatted(date: .long, time: .shortened))
+                        } header: {
+                            Label("Details", systemImage: "clock")
+                        }
+                        .listRowBackground(UltraThinView())
+
+                        if !workout.exerciseSets.isEmpty {
+                            Section {
+                                ForEach(workout.exerciseSets) { set in
+                                    HStack {
+                                        Text(set.excersize.name)
+                                        Spacer()
+                                        Text("\(set.reps) reps @ \(String(format: "%.1f", set.weight))kg")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                            } header: {
+                                Label("Sets", systemImage: "figure.strengthtraining.traditional")
+                            }
+                            .listRowBackground(UltraThinView())
+                        }
 
                         Section {
                             TextEditor(text: $notes)
@@ -50,7 +79,7 @@ struct WorkoutDetailView: View {
                     .scrollContentBackground(.hidden)
                 }
                 .scrollIndicators(.hidden)
-                .scrollBounceBehavior(.basedOnSize)
+                .scrollDismissesKeyboard(.immediately)
             }
             .navigationTitle(workout.name)
             .toolbar {
@@ -80,6 +109,31 @@ struct WorkoutDetailView: View {
                         }
                     }
                 }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(role: .destructive) {
+                        showDeleteAlert = true
+                    } label: {
+                        Label {
+                            Text("Delete")
+                                .foregroundColor(.red)
+                        } icon: {
+                            Image(systemName: "trash")
+                                .foregroundColor(.red)
+                        }
+                        .labelStyle(.iconOnly)
+                    }
+                }
+            }
+            .alert("Delete Workout", isPresented: $showDeleteAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    modelContext.delete(workout)
+                    try? modelContext.save()
+                    dismiss()
+                }
+            } message: {
+                Text("Are you sure you want to delete this workout? This action cannot be undone.")
             }
         }
     }
@@ -92,6 +146,18 @@ struct WorkoutDetailView: View {
     private func saveNotes() {
         workout.notes = notes
         try? modelContext.save()
+    }
+    
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let hours = Int(duration) / 3600
+        let minutes = Int(duration) / 60 % 60
+        let seconds = Int(duration) % 60
+        
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%02d:%02d", minutes, seconds)
+        }
     }
 }
 

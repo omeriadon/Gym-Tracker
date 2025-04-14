@@ -20,7 +20,7 @@ class ObservableModelContainer: ObservableObject, Observable {
 @main
 struct Gym_TrackerApp: App {
     @State private var isDarkMode = UserSettings.shared.themeMode == .dark
-    @State private var workoutManager = WorkoutManager()
+    @StateObject private var workoutManager = WorkoutManager()
     @StateObject private var observableModelContainer = ObservableModelContainer()
 
     init() {
@@ -29,16 +29,13 @@ struct Gym_TrackerApp: App {
     
     var body: some Scene {
         WindowGroup {
-            
             WorkoutBannerView()
-                .environment(workoutManager)
+                .environmentObject(workoutManager)
                 .environmentObject(observableModelContainer)
                 .preferredColorScheme(isDarkMode ? .dark : .light)
 
-        
             Spacer()
                 .frame(height: 1)
-            
             
             ZStack(alignment: .top) {
                 TabView {
@@ -62,9 +59,8 @@ struct Gym_TrackerApp: App {
                             Label("Settings", systemImage: "gear")
                         }
                 }
-
             }
-            .environment(workoutManager)
+            .environmentObject(workoutManager)
             .environmentObject(observableModelContainer)
             .environment(\.modelContext, observableModelContainer.container.mainContext)
             .preferredColorScheme(isDarkMode ? .dark : .light)

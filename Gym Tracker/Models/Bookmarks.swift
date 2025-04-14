@@ -23,11 +23,10 @@ class Bookmark {
     }
 }
 
-
 struct BookmarksView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var bookmarks: [Bookmark]
-    @Query private var workouts: [Workout] // Added workouts query
+    @Query private var workouts: [Workout]
 
     var body: some View {
         NavigationStack {
@@ -51,6 +50,14 @@ struct BookmarksView: View {
                                         NavigationLink(destination: ExercizeGroupDetailView(name: bookmark.name)) {
                                             Text(bookmark.name)
                                         }
+                                        .swipeActions(edge: .trailing) {
+                                            Button(role: .destructive) {
+                                                modelContext.delete(bookmark)
+                                                try? modelContext.save()
+                                            } label: {
+                                                Label("Remove", systemImage: "bookmark.slash.fill")
+                                            }
+                                        }
                                     }
                                 }
                                 .listRowBackground(UltraThinView())
@@ -64,6 +71,14 @@ struct BookmarksView: View {
                                         if let exercise = allExercizes.first(where: { $0.name == bookmark.name }) {
                                             NavigationLink(destination: ExercizeDetailView(exercize: exercise)) {
                                                 Text(bookmark.name)
+                                            }
+                                            .swipeActions(edge: .trailing) {
+                                                Button(role: .destructive) {
+                                                    modelContext.delete(bookmark)
+                                                    try? modelContext.save()
+                                                } label: {
+                                                    Label("Remove", systemImage: "bookmark.slash.fill")
+                                                }
                                             }
                                         }
                                     }
@@ -79,6 +94,14 @@ struct BookmarksView: View {
                                         if let workout = workouts.first(where: { $0.name == bookmark.name }) {
                                             NavigationLink(destination: WorkoutDetailView(workout: workout)) {
                                                 Text(bookmark.name)
+                                            }
+                                            .swipeActions(edge: .trailing) {
+                                                Button(role: .destructive) {
+                                                    modelContext.delete(bookmark)
+                                                    try? modelContext.save()
+                                                } label: {
+                                                    Label("Remove", systemImage: "bookmark.slash.fill")
+                                                }
                                             }
                                         }
                                     }

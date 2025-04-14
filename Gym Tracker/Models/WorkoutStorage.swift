@@ -1,35 +1,54 @@
 import SwiftUI
 import SwiftData
 
-// A simple singleton to handle workout storage
+@Observable
 class WorkoutStorage {
-    static let shared = WorkoutStorage(modelContext: EnvironmentValues().modelContext)
-    private var modelContext: ModelContext
+    var activeWorkout: Workout?
+    private var modelContext: ModelContext?
+    
+    static let shared = WorkoutStorage()
 
-    init(modelContext: ModelContext) {
-        self.modelContext = modelContext
+    private init() {}
+    
+    func setModelContext(_ context: ModelContext) {
+        self.modelContext = context
     }
 
-    func saveWorkout(_ workout: Workout) {
-        Task { @MainActor in
-            do {
-                // Create a new workout instance in the context
-                let newWorkout = Workout(
-                    id: workout.id,
-                    name: workout.name,
-                    date: workout.date,
-                    duration: workout.duration,
-                    notes: workout.notes,
-                    exerciseSets: workout.exerciseSets,
-                    isActive: false
-                )
-                
-                modelContext.insert(newWorkout)
-                try modelContext.save()
-                print("Workout saved successfully: \(workout.name)")
-            } catch {
-                print("Failed to save workout: \(error.localizedDescription)")
-            }
+    func saveWorkoutState() {
+        guard let modelContext = modelContext else {
+            print("Model context not set")
+            return
         }
+        
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save workout state: \(error)")
+        }
+    }
+    
+    func insertWorkout(_ workout: Workout) {
+        guard let modelContext = modelContext else {
+            print("Model context not set")
+            return
+        }
+        
+        modelContext.insert(workout)
+        saveWorkoutState()
+    }
+
+    func deleteWorkout(_ workout: Workout) {
+        guard let modelContext = modelContext else {
+            print("Model context not set")
+            return
+        }
+        
+        modelContext.delete(workout)
+        saveWorkoutState()
+    }
+    
+    func clearActiveWorkout() {
+        activeWorkout = nil
+        saveWorkoutState()
     }
 }

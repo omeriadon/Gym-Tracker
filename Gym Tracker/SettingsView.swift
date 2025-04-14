@@ -31,6 +31,11 @@ struct SettingsView: View {
     
     @State var noise: Double = 20
     
+    @State private var selectedWorkout: Workout? = nil
+    @State private var showEditWorkoutSheet = false
+    
+    @Environment(\.modelContext) private var modelContext
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -161,7 +166,54 @@ struct SettingsView: View {
                         }
                         .listRowBackground(ColorfulView(color: $colours, speed: $speed, noise: $noise))
 
-                        
+                        Section {
+                            ForEach(completedWorkouts) { workout in
+                                Button(action: {
+                                    selectedWorkout = workout
+                                    showEditWorkoutSheet = true
+                                }) {
+                                    HStack {
+                                        Text(workout.name)
+                                        Spacer()
+                                        Text(workout.date, style: .date)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                        }
+                        .listRowBackground(UltraThinView())
+                        .sheet(isPresented: $showEditWorkoutSheet) {
+                            if let workout = selectedWorkout {
+                                NavigationStack {
+                                    VStack {
+                                        TextField("Workout Name", text: Binding(
+                                            get: { workout.name },
+                                            set: { workout.name = $0 }
+                                        ))
+                                        .textFieldStyle(.roundedBorder)
+
+                                        TextEditor(text: Binding(
+                                            get: { workout.notes },
+                                            set: { workout.notes = $0 }
+                                        ))
+                                        .frame(height: 200)
+                                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+
+                                        Button("Save") {
+                                            do {
+                                                try modelContext.save()
+                                                showEditWorkoutSheet = false
+                                            } catch {
+                                                print("Failed to save workout: \(error.localizedDescription)")
+                                            }
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                    }
+                                    .padding()
+                                    .navigationTitle("Edit Workout")
+                                }
+                            }
+                        }
                         
                     }
                     .scrollContentBackground(.hidden) // Make form background transparent
@@ -258,22 +310,14 @@ struct SettingsView: View {
     
         // Function to reset all SwiftData content
     private func resetAllData() {
-            // Access the ModelContainer for your app
-        guard let modelContainer = try? ModelContainer(for: Exercize.self, ExercizeSet.self, Workout.self, Bookmark.self) else { // Added Bookmark.self
-            fatalError("Failed to initialize ModelContainer")
-        }
-        
-        let context = modelContainer.mainContext
-        
-            // Batch delete all entities (repeat for each model type)
         do {
-            try context.delete(model: Exercize.self)
-            try context.delete(model: ExercizeSet.self)
-            try context.delete(model: Workout.self)
-            try context.delete(model: Bookmark.self)
-            
-                // Save changes
-            try context.save()
+            let fetchDescriptor = FetchDescriptor<Workout>()
+            let workouts = try modelContext.fetch(fetchDescriptor)
+            for workout in workouts {
+                modelContext.delete(workout)
+            }
+            try modelContext.save()
+            print("All data reset successfully.")
         } catch {
             print("Failed to delete data: \(error.localizedDescription)")
         }

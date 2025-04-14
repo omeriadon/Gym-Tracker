@@ -3,20 +3,27 @@ import SwiftData
 
 class WorkoutListManager {
     static let shared = WorkoutListManager()
-    private var modelContext: ModelContext
-
-    private init() {
-        self.modelContext = EnvironmentValues().modelContext
+    private var modelContext: ModelContext?
+    
+    private init() {}
+    
+    func setModelContext(_ context: ModelContext) {
+        self.modelContext = context
     }
 
     func fetchWorkouts() -> [Workout] {
-        let fetchDescriptor = FetchDescriptor<Workout>()
+        guard let modelContext = modelContext else {
+            print("Model context not set")
+            return []
+        }
+        let fetchDescriptor = FetchDescriptor<Workout>(sortBy: [SortDescriptor(\Workout.date, order: .reverse)])
         return (try? modelContext.fetch(fetchDescriptor)) ?? []
     }
 }
 
 struct WorkoutListView: View {
-    @State private var workouts: [Workout] = []
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Workout.date, order: .reverse) private var workouts: [Workout]
 
     var body: some View {
         NavigationStack {
@@ -44,6 +51,17 @@ struct WorkoutListView: View {
                                 }
                                 .listRowBackground(UltraThinView())
                             }
+                            .onDelete { indexSet in
+                                for index in indexSet {
+                                    let workoutToDelete = workouts[index]
+                                    modelContext.delete(workoutToDelete)
+                                    do {
+                                        try modelContext.save()
+                                    } catch {
+                                        print("Failed to delete workout: \(error.localizedDescription)")
+                                    }
+                                }
+                            }
                         }
                         .scrollContentBackground(.hidden)
                     }
@@ -52,9 +70,6 @@ struct WorkoutListView: View {
                 .scrollBounceBehavior(.basedOnSize)
             }
             .navigationTitle("Workouts")
-            .onAppear {
-                workouts = WorkoutListManager.shared.fetchWorkouts()
-            }
         }
     }
 }
