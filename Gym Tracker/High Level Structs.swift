@@ -62,7 +62,7 @@ class ExercizeSet {
 }
 
 
-@Model
+
 class ExercizeGroupStruct {
     
     var id: UUID

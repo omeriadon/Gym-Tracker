@@ -70,35 +70,63 @@ struct ExercizeListView: View {
                         
                 }            }
             .searchSuggestions {
-                Section(header: Text("Groups")) {
-                    ForEach(suggestedTokens.filter { token in
-                        if case .category = token {
-                            return searchText.isEmpty || token.id.lowercased().contains(searchText.lowercased())
-                        }
-                        return false
-                    }, id: \ .id) { token in
-                        Button(action: {
-                            selectedTokens.append(token)
-                        }) {
-                            if case .category(let category) = token {
+                if searchText.isEmpty {
+                    Section("Categories") {
+                        ForEach(ExercizeToken.allCases) { category in
+                            Button {
+                                selectedTokens.append(.category(category))
+                            } label: {
                                 Label(category.rawValue, systemImage: category.icon)
                             }
                         }
                     }
-                }
-                Divider()
-                Section(header: Text("Muscles")) {
-                    ForEach(suggestedTokens.filter { token in
-                        if case .muscle = token {
-                            return searchText.isEmpty || token.id.lowercased().contains(searchText.lowercased())
-                        }
-                        return false
-                    }, id: \ .id) { token in
-                        Button(action: {
-                            selectedTokens.append(token)
-                        }) {
-                            if case .muscle(let muscle) = token {
+
+                    Section("Common Muscles") {
+                        ForEach(allExercizes.commonMuscles(), id: \.self) { muscle in
+                            Button {
+                                selectedTokens.append(.muscle(muscle))
+                            } label: {
                                 Label(muscle, systemImage: getMuscleIcon(muscle))
+                            }
+                        }
+                    }
+
+                    Section("Other") {
+                        Button {
+                            selectedTokens.append(.bookmarked)
+                        } label: {
+                            Label("Bookmarked", systemImage: "bookmark.fill")
+                        }
+                    }
+                } else {
+                    let matchingCategories = ExercizeToken.allCases.filter {
+                        $0.rawValue.lowercased().contains(searchText.lowercased())
+                    }
+
+                    if !matchingCategories.isEmpty {
+                        Section("Categories") {
+                            ForEach(matchingCategories) { category in
+                                Button {
+                                    selectedTokens.append(.category(category))
+                                } label: {
+                                    Label(category.rawValue, systemImage: category.icon)
+                                }
+                            }
+                        }
+                    }
+
+                    let matchingMuscles = allExercizes.commonMuscles().filter {
+                        $0.lowercased().contains(searchText.lowercased())
+                    }
+
+                    if !matchingMuscles.isEmpty {
+                        Section("Muscles") {
+                            ForEach(matchingMuscles, id: \.self) { muscle in
+                                Button {
+                                    selectedTokens.append(.muscle(muscle))
+                                } label: {
+                                    Label(muscle, systemImage: getMuscleIcon(muscle))
+                                }
                             }
                         }
                     }

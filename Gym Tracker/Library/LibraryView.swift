@@ -47,6 +47,18 @@ struct LibraryView: View {
                         }
                         .listRowBackground(UltraThinView())
                         
+                        Section {
+                            
+                            NavigationLink {
+                                WorkoutListView()
+                            } label: {
+                                Label("Workouts", systemImage: "rectangle.stack")
+                                    .frame(height: 40)
+                            }
+                            
+                        }
+                        .listRowBackground(UltraThinView())
+                        
                         
                         Section {
                             

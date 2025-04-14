@@ -259,9 +259,8 @@ struct SettingsView: View {
         // Function to reset all SwiftData content
     private func resetAllData() {
             // Access the ModelContainer for your app
-        guard let modelContainer = try? ModelContainer(for: Exercize.self, ExercizeSet.self, ExercizeGroupStruct.self, Workout.self) else {
-            print("Failed to access model container")
-            return
+        guard let modelContainer = try? ModelContainer(for: Exercize.self, ExercizeSet.self, Workout.self, Bookmark.self) else { // Added Bookmark.self
+            fatalError("Failed to initialize ModelContainer")
         }
         
         let context = modelContainer.mainContext
@@ -269,9 +268,9 @@ struct SettingsView: View {
             // Batch delete all entities (repeat for each model type)
         do {
             try context.delete(model: Exercize.self)
-            try context.delete(model: ExercizeGroupStruct.self)
             try context.delete(model: ExercizeSet.self)
             try context.delete(model: Workout.self)
+            try context.delete(model: Bookmark.self)
             
                 // Save changes
             try context.save()

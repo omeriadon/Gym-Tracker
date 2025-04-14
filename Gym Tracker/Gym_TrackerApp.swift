@@ -9,11 +9,20 @@ import SwiftUI
 import SwiftData
 import ColorfulX
 
+class ObservableModelContainer: ObservableObject, Observable {
+    let container: ModelContainer
+
+    init() {
+        self.container = try! ModelContainer(for: Workout.self, ExercizeSet.self, Exercize.self, Bookmark.self)
+    }
+}
+
 @main
 struct Gym_TrackerApp: App {
     @State private var isDarkMode = UserSettings.shared.themeMode == .dark
     @State private var workoutManager = WorkoutManager()
-    
+    @StateObject private var observableModelContainer = ObservableModelContainer()
+
     init() {
         loadAndGroupExercizes()
     }
@@ -23,6 +32,7 @@ struct Gym_TrackerApp: App {
             
             WorkoutBannerView()
                 .environment(workoutManager)
+                .environmentObject(observableModelContainer)
                 .preferredColorScheme(isDarkMode ? .dark : .light)
 
         
@@ -55,12 +65,13 @@ struct Gym_TrackerApp: App {
 
             }
             .environment(workoutManager)
+            .environmentObject(observableModelContainer)
+            .environment(\.modelContext, observableModelContainer.container.mainContext)
             .preferredColorScheme(isDarkMode ? .dark : .light)
             .onAppear {
                 setupThemeChangeListener()
             }
         }
-        .modelContainer(for: [Workout.self, Exercize.self, ExercizeSet.self, Bookmark.self]) // Ensure the Workout model is part of the container
     }
     
     func setupThemeChangeListener() {

@@ -11,7 +11,6 @@ import SwiftData
 struct ExercizeDetailView: View {
     var exercize: Exercize
     @Environment(\.modelContext) private var modelContext
-    @Query private var bookmarkedItems: [Bookmark]
     @State private var isBookmarked: Bool = false
 
     var body: some View {
@@ -56,45 +55,35 @@ struct ExercizeDetailView: View {
             .navigationTitle(exercize.name)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: toggleBookmark) {
+                    Button {
+                        if isBookmarked {
+                            let name = exercize.name
+                            let fetchDescriptor = FetchDescriptor<Bookmark>(predicate: #Predicate { $0.name == name && $0.type == "exercise" })
+
+
+                            if let bookmark = try? modelContext.fetch(fetchDescriptor).first {
+                                modelContext.delete(bookmark)
+                                try? modelContext.save()
+                            }
+                        } else {
+                            let newBookmark = Bookmark(name: exercize.name, type: "exercise")
+                            modelContext.insert(newBookmark)
+                            try? modelContext.save()
+                        }
+                        isBookmarked.toggle()
+                    } label: {
                         Label("Bookmark", systemImage: isBookmarked ? "bookmark.fill" : "bookmark")
+                    }
+                    .onAppear {
+                        let name = exercize.name
+                        let fetchDescriptor = FetchDescriptor<Bookmark>(predicate: #Predicate { $0.name == name && $0.type == "exercise" })
+                        if let bookmarks = try? modelContext.fetch(fetchDescriptor) {
+                            isBookmarked = !bookmarks.isEmpty
+                        }
                     }
                 }
             }
-            .onAppear {
-                checkIfBookmarked()
-            }
         }
-    }
-
-    private func checkIfBookmarked() {
-        isBookmarked = bookmarkedItems.contains { item in
-            item.name == exercize.name && item.type == BookmarkType.exercise.rawValue
-        }
-    }
-
-    private func toggleBookmark() {
-        if isBookmarked {
-            // Remove bookmark
-            if let bookmarkToDelete = bookmarkedItems.first(where: {
-                $0.name == exercize.name && $0.type == BookmarkType.exercise.rawValue
-            }) {
-                modelContext.delete(bookmarkToDelete)
-                try? modelContext.save()
-            }
-        } else {
-            // Add bookmark
-            let newBookmark = Bookmark(name: exercize.name, type: BookmarkType.exercise.rawValue)
-            modelContext.insert(newBookmark)
-            do {
-                try modelContext.save()
-            } catch {
-                print("ERROR SAVING: \(error.localizedDescription)")
-            }
-        }
-
-        // Update state
-        isBookmarked.toggle()
     }
 }
 

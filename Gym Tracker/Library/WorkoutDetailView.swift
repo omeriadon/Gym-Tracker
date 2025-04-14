@@ -1,45 +1,49 @@
 //
-//  ExercizeGroupDetailView.swift
+//  WorkoutDetailView.swift
 //  Gym Tracker
 //
-//  Created by Adon Omeri on 13/4/2025.
+//  Created by Adon Omeri on 14/4/2025.
 //
 
 import SwiftUI
 import SwiftData
 
-struct ExercizeGroupDetailView: View {
-    var name: String
+struct WorkoutDetailView: View {
+    var workout: Workout
     @Environment(\.modelContext) private var modelContext
+    @State private var name: String
+    @State private var notes: String
     @State private var isBookmarked: Bool = false
 
-    // Find the ExercizeGroupStruct for this group name
-    private var groupStruct: ExercizeGroupStruct? {
-        exerciseGroups.first { $0.name.capitalized == name.capitalized }
+    init(workout: Workout) {
+        self.workout = workout
+        _name = State(initialValue: workout.name)
+        _notes = State(initialValue: workout.notes)
     }
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
-                // Add the gradient background
                 GradientBackgroundView.random()
-                
+
                 VStack {
                     Spacer()
                         .frame(height: 15)
-                    
+
                     List {
                         Section {
-                            ForEach(allExercizes.filter { $0.group.capitalized == name.capitalized }) { exercize in
-                                NavigationLink {
-                                    ExercizeDetailView(exercize: exercize)
-                                } label: {
-                                    Label("\(exercize.name)", systemImage: "dumbbell")
-                                }
-                            }
+                            TextField("Workout Name", text: $name, onCommit: saveName)
                         } header: {
-                            Text("\(name) Exercises")
-                                .font(.headline)
+                            Label("Name", systemImage: "pencil")
+                        }
+                        .listRowBackground(UltraThinView())
+
+                        Section {
+                            TextEditor(text: $notes)
+                                .onChange(of: notes) {
+                                    saveNotes() }
+                        } header: {
+                            Label("Notes", systemImage: "book")
                         }
                         .listRowBackground(UltraThinView())
                     }
@@ -48,18 +52,19 @@ struct ExercizeGroupDetailView: View {
                 .scrollIndicators(.hidden)
                 .scrollBounceBehavior(.basedOnSize)
             }
-            .navigationTitle(name)
+            .navigationTitle(workout.name)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         if isBookmarked {
-                            let fetchDescriptor = FetchDescriptor<Bookmark>(predicate: #Predicate { $0.name == name && $0.type == "exerciseGroup" })
+                            let name = workout.name
+                            let fetchDescriptor = FetchDescriptor<Bookmark>(predicate: #Predicate { $0.name == name && $0.type == "workout" })
                             if let bookmark = try? modelContext.fetch(fetchDescriptor).first {
                                 modelContext.delete(bookmark)
                                 try? modelContext.save()
                             }
                         } else {
-                            let newBookmark = Bookmark(name: name, type: "exerciseGroup")
+                            let newBookmark = Bookmark(name: workout.name, type: "workout")
                             modelContext.insert(newBookmark)
                             try? modelContext.save()
                         }
@@ -68,7 +73,8 @@ struct ExercizeGroupDetailView: View {
                         Label("Bookmark", systemImage: isBookmarked ? "bookmark.fill" : "bookmark")
                     }
                     .onAppear {
-                        let fetchDescriptor = FetchDescriptor<Bookmark>(predicate: #Predicate { $0.name == name && $0.type == "exerciseGroup" })
+                        let name = workout.name
+                        let fetchDescriptor = FetchDescriptor<Bookmark>(predicate: #Predicate { $0.name == name && $0.type == "workout" })
                         if let bookmarks = try? modelContext.fetch(fetchDescriptor) {
                             isBookmarked = !bookmarks.isEmpty
                         }
@@ -77,8 +83,18 @@ struct ExercizeGroupDetailView: View {
             }
         }
     }
+
+    private func saveName() {
+        workout.name = name
+        try? modelContext.save()
+    }
+
+    private func saveNotes() {
+        workout.notes = notes
+        try? modelContext.save()
+    }
 }
 
 #Preview {
-    ExercizeGroupDetailView(name: "Chest")
+    WorkoutDetailView(workout: Workout(id: UUID(), name: "name", date: Date.now, duration: 46, notes: "notes", exerciseSets: []))
 }
