@@ -20,6 +20,16 @@ struct Gym_TrackerApp: App {
     
     var body: some Scene {
         WindowGroup {
+            
+            WorkoutBannerView()
+                .environment(workoutManager)
+                .preferredColorScheme(isDarkMode ? .dark : .light)
+
+        
+            Spacer()
+                .frame(height: 1)
+            
+            
             ZStack(alignment: .top) {
                 TabView {
                     ContentView()
@@ -42,8 +52,7 @@ struct Gym_TrackerApp: App {
                             Label("Settings", systemImage: "gear")
                         }
                 }
-                
-                WorkoutBannerView()
+
             }
             .environment(workoutManager)
             .preferredColorScheme(isDarkMode ? .dark : .light)
@@ -51,7 +60,7 @@ struct Gym_TrackerApp: App {
                 setupThemeChangeListener()
             }
         }
-        .modelContainer(for: [BookmarkEntity.self], isAutosaveEnabled: true)
+        .modelContainer(for: [Workout.self, Exercize.self, ExercizeSet.self]) // Ensure the Workout model is part of the container
     }
     
     func setupThemeChangeListener() {

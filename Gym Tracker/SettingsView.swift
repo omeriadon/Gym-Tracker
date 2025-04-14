@@ -11,15 +11,16 @@ import ColorfulX
 
 struct SettingsView: View {
     
-    @State private var isDarkMode = SettingsView.isDarkModeEnabled()
-    @State private var units = SettingsView.getUnits()
-    @State private var name = SettingsView.getName()
+    @State var isDarkMode = SettingsView.isDarkModeEnabled()
+    @State var units = SettingsView.getUnits()
+    @State var name = SettingsView.getName()
     
         // Alert state variables
-    @State private var showResetSettingsAlert = false
-    @State private var showDeleteDataAlert = false
-    @State private var showResetAllAlert = false
+    @State var showResetSettingsAlert = false
+    @State var showDeleteDataAlert = false
+    @State var showResetAllAlert = false
     
+    @Query var completedWorkouts: [Workout]
     
     var body: some View {
         NavigationStack {
@@ -113,7 +114,7 @@ struct SettingsView: View {
                                     resetAllData()
                                 }
                             } message: {
-                                Text("Are you sure you want to delete all workout data? This action cannot be undone.")
+                                Text("Are you sure you want to delete all workouts (\(completedWorkouts.count))?\n\nThis will also delete custom workouts and exercizes.")
                             }
                             
                             Button {
@@ -130,7 +131,8 @@ struct SettingsView: View {
                                     UserSettings.shared.resetAllSettings()
                                 }
                             } message: {
-                                Text("Are you sure you want to reset all settings and delete all data? This action cannot be undone.")
+
+                                Text("Are you sure you want to reset all settings and delete all data? This action cannot be undone.\n\n\(completedWorkouts.count) workouts will be deleted, including any custom workouts and exercises.")
                             }
                             
                         }

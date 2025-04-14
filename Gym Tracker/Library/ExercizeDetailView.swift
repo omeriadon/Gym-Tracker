@@ -102,6 +102,7 @@ struct ExercizeDetailView: View {
                 $0.name == exercize.name && $0.type == BookmarkType.exercise.rawValue 
             }) {
                 modelContext.delete(bookmarkToDelete)
+                try? modelContext.save()
             }
         } else {
             // Add bookmark
@@ -117,7 +118,6 @@ struct ExercizeDetailView: View {
         // Update state
         isBookmarked.toggle()
         
-        // No need for explicit save with SwiftData - it automatically saves
     }
 }
 

@@ -7,9 +7,12 @@ import SwiftData
 class WorkoutManager {
     var activeWorkout: Workout?
     var workoutStartTime: Date?
-    private var timer: Timer?
+    private var appTimer: Timer?
+    private var liveActivityTimer: Timer?
     private var liveActivity: Activity<WorkoutAttributes>?
-    
+
+
+
     init() {
         // Initialize any needed properties
     }
@@ -27,7 +30,7 @@ class WorkoutManager {
         
         self.activeWorkout = workout
         self.workoutStartTime = Date()
-        startTimer()
+        startTimers()
         
         // Only try to start Live Activity if supported
         if ActivityAuthorizationInfo().areActivitiesEnabled {
@@ -35,30 +38,47 @@ class WorkoutManager {
         }
     }
     
-    func endWorkout() {
+    @MainActor func endWorkout() {
+        guard let workout = activeWorkout else { return }
+
+        // Ensure the duration is set correctly before ending the workout
+        workout.duration = Date().timeIntervalSince(workoutStartTime ?? Date())
+        
+        // Save using WorkoutStorage which creates a new instance
+        WorkoutStorage.shared.saveWorkout(workout)
+
         activeWorkout?.isActive = false
         activeWorkout = nil
         workoutStartTime = nil
-        timer?.invalidate()
-        timer = nil
-        
+
+        appTimer?.invalidate()
+        appTimer = nil
+        liveActivityTimer?.invalidate()
+        liveActivityTimer = nil
+
         if let _ = liveActivity {
             endLiveActivity()
         }
     }
     
-    private func startTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+    private func startTimers() {
+        // App timer updates every second
+        appTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self,
                   let startTime = self.workoutStartTime else { return }
             
             let duration = Date().timeIntervalSince(startTime)
             self.activeWorkout?.duration = duration
+        }
+        
+        // Live activity timer updates every 5 seconds
+        liveActivityTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            guard let self = self,
+                  let startTime = self.workoutStartTime,
+                  let _ = liveActivity else { return }
             
-            // Only update Live Activity if it exists
-            if let _ = liveActivity {
-                self.updateLiveActivity(duration: duration)
-            }
+            let duration = Date().timeIntervalSince(startTime)
+            self.updateLiveActivity(duration: duration)
         }
     }
     

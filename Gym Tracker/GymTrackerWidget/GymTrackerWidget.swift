@@ -14,8 +14,10 @@ struct WorkoutActivityConfiguration: Widget {
         ActivityConfiguration(for: WorkoutAttributes.self) { context in
             // Lock Screen/Banner UI
             WorkoutLiveActivityView(context: context)
-                .activitySystemActionForegroundColor(.indigo)
-                .activityBackgroundTint(.purple.opacity(0.2))
+                .activitySystemActionForegroundColor(.white)
+                .foregroundStyle(.white)
+                .activityBackgroundTint(.red.opacity(0.2))
+
         } dynamicIsland: { context in
             DynamicIsland {
                 // Expanded UI
@@ -36,12 +38,13 @@ struct WorkoutActivityConfiguration: Widget {
                         if let exercise = context.state.currentExerciseName {
                             Text(exercise)
                                 .font(.subheadline)
+                                .foregroundStyle(.secondary)
                         }
                         Spacer()
                         Text("Sets: \(context.state.setCount)")
                             .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                    .foregroundStyle(.secondary)
                 }
             } compactLeading: {
                 Label("Workout", systemImage: "figure.run")
@@ -60,5 +63,15 @@ struct WorkoutActivityConfiguration: Widget {
         let minutes = Int(duration) / 60
         let seconds = Int(duration) % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+}
+
+
+struct UltraThinView: View {
+    var body: some View {
+        ZStack {
+            Color.clear
+                .background(.ultraThinMaterial)
+        }
     }
 }

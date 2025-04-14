@@ -79,11 +79,13 @@ struct ExercizeGroupDetailView: View {
                 $0.name == name && $0.type == BookmarkType.exerciseGroup.rawValue 
             }) {
                 modelContext.delete(bookmarkToDelete)
+                try? modelContext.save()
             }
         } else {
             // Add bookmark
             let newBookmark = BookmarkEntity(name: name, type: BookmarkType.exerciseGroup.rawValue)
             modelContext.insert(newBookmark)
+            try? modelContext.save()
         }
         
         // Update state

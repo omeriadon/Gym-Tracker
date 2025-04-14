@@ -8,15 +8,17 @@ enum BookmarkType: String, Codable {
 }
 
 @Model
-final class BookmarkEntity {
+class BookmarkEntity {
+    var id: UUID
     var name: String
     var type: String
-    var dateAdded: Date
+    var timestamp: Date
     
     init(name: String, type: String) {
+        self.id = UUID()
         self.name = name
         self.type = type
-        self.dateAdded = Date()
+        self.timestamp = Date()
     }
 }
 

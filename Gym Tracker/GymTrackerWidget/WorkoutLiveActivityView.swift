@@ -12,20 +12,25 @@ struct WorkoutLiveActivityView: View {
     var body: some View {
         VStack {
             HStack {
-                Label(context.attributes.workoutName, systemImage: "figure.run")
+                Label(context.attributes.workoutName, systemImage: "dumbbell")
                     .font(.headline)
                 Spacer()
                 Text(formatDuration(duration))
                     .font(.system(.body, design: .monospaced))
             }
             
-            if let exercise = currentExercise {
-                Text(exercise)
-                    .font(.subheadline)
-            }
+            Spacer()
+                .frame(height: 10)
             
-            Text("Sets completed: \(setCount)")
-                .font(.caption)
+            HStack {
+                if let exercise = currentExercise {
+                    Text(exercise)
+                        .font(.subheadline)
+                }
+                
+                Text("Sets completed: \(setCount)")
+                    .font(.caption)
+            }
         }
         .padding()
     }
@@ -42,3 +47,6 @@ struct WorkoutLiveActivityView: View {
         }
     }
 }
+
+
+
