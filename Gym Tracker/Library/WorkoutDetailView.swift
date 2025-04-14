@@ -16,6 +16,10 @@ struct WorkoutDetailView: View {
     @State private var notes: String
     @State private var isBookmarked: Bool = false
     @State private var showDeleteAlert = false
+    @State private var editingSet: ExercizeSet?
+    @State private var editReps: String = ""
+    @State private var editWeight: String = ""
+    @State private var editFailureLevel: FailureLevel = .noFailure
 
     init(workout: Workout) {
         self.workout = workout
@@ -55,11 +59,40 @@ struct WorkoutDetailView: View {
                             Section {
                                 ForEach(workout.exerciseSets) { set in
                                     HStack {
+                                        Circle()
+                                            .fill(set.hitFailure.color)
+                                            .frame(width: 12, height: 12)
                                         Text(set.excersize.name)
                                         Spacer()
                                         Text("\(set.reps) reps @ \(String(format: "%.1f", set.weight))kg")
                                             .foregroundStyle(.secondary)
                                     }
+                                    .swipeActions(edge: .trailing) {
+                                        Button(role: .destructive) {
+                                            if let index = workout.exerciseSets.firstIndex(where: { $0.id == set.id }) {
+                                                workout.exerciseSets.remove(at: index)
+                                                try? modelContext.save()
+                                            }
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                        
+                                        Button {
+                                            editingSet = set
+                                            editReps = "\(set.reps)"
+                                            editWeight = "\(set.weight)"
+                                            editFailureLevel = set.hitFailure
+                                        } label: {
+                                            Label("Edit", systemImage: "pencil")
+                                        }
+                                        .tint(.yellow)
+                                    }
+                                }
+                                .onDelete { indices in
+                                    indices.forEach { index in
+                                        workout.exerciseSets.remove(at: index)
+                                    }
+                                    try? modelContext.save()
                                 }
                             } header: {
                                 Label("Sets", systemImage: "figure.strengthtraining.traditional")
@@ -134,6 +167,61 @@ struct WorkoutDetailView: View {
                 }
             } message: {
                 Text("Are you sure you want to delete this workout? This action cannot be undone.")
+            }
+            .popover(item: $editingSet) { set in
+                NavigationStack {
+                    List {
+                        Section {
+                            HStack {
+                                Text("Reps")
+                                TextField("", text: $editReps)
+                                    .keyboardType(.numberPad)
+                            }
+                            HStack {
+                                Text("Weight:")
+                                TextField("", text: $editWeight)
+                                    .keyboardType(.decimalPad)
+                            }
+                            Picker("Failure Level", selection: $editFailureLevel) {
+                                ForEach([FailureLevel.noFailure, .mildDiscomfort, .almostFailure, .completeFailure], id: \.self) { level in
+                                    HStack {
+                                        Circle()
+                                            .fill(level.color)
+                                            .frame(width: 12, height: 12)
+                                        Text(level.description)
+                                    }
+                                }
+                            }
+                            .listRowBackground(editFailureLevel.color.opacity(0.2))
+
+                        } header: {
+                            Label("Edit Set", systemImage: "pencil")
+                        }
+                    }
+                    .scrollContentBackground(.hidden)
+                    .navigationTitle("Edit Set")
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Save") {
+                                if let reps = Int(editReps),
+                                   let weight = Double(editWeight) {
+                                    set.reps = reps
+                                    set.weight = weight
+                                    set.hitFailure = editFailureLevel
+                                    try? modelContext.save()
+                                    editingSet = nil
+                                }
+                            }
+                        }
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                editingSet = nil
+                            }
+                        }
+                    }
+                }
+                .frame(minWidth: 300, minHeight: 500)
+                .presentationCompactAdaptation(.sheet)
             }
         }
     }

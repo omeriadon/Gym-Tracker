@@ -19,6 +19,10 @@ class ObservableModelContainer: ObservableObject, Observable {
 
 @main
 struct Gym_TrackerApp: App {
+    
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+
+    
     @State private var isDarkMode = UserSettings.shared.themeMode == .dark
     @StateObject private var workoutManager = WorkoutManager()
     @StateObject private var observableModelContainer = ObservableModelContainer()

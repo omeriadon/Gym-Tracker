@@ -247,10 +247,11 @@ struct SettingsView: View {
                     }
                     
                     .scrollIndicators(.hidden)
-                    .scrollBounceBehavior(.basedOnSize)
                 }
                 
             }
+            .scrollBounceBehavior(.basedOnSize)
+
             .navigationTitle("Settings")
             .onAppear {
                     // Make sure the UI reflects the current settings when view appears

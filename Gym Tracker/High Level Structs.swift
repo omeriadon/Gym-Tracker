@@ -109,15 +109,10 @@ class Workout {
     //MARK: Enums
 
 enum FailureLevel: String, Codable {
-    
-
-    
-    
     case noFailure
     case mildDiscomfort
     case almostFailure
     case completeFailure
-    
     
     var description: String {
         switch self {
@@ -129,6 +124,19 @@ enum FailureLevel: String, Codable {
                 return "Almost Failure"
             case .completeFailure:
                 return "Complete Failure"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+            case .noFailure:
+                return .red
+            case .mildDiscomfort:
+                return .orange
+            case .almostFailure:
+                return .green
+            case .completeFailure:
+                return .blue
         }
     }
 }
