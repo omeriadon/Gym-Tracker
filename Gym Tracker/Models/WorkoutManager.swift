@@ -23,7 +23,14 @@ class WorkoutManager: ObservableObject {
         }
     }
     
-    @MainActor func startWorkout(name: String = "New Workout") {
+    private func getDefaultWorkoutName() -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: Date())
+    }
+    
+    @MainActor func startWorkout(name: String? = nil) {
         // End any existing workout first
         if activeWorkout != nil {
             endWorkout()
@@ -31,7 +38,7 @@ class WorkoutManager: ObservableObject {
         
         let workout = Workout(
             id: UUID(),
-            name: name,
+            name: name ?? getDefaultWorkoutName(),
             date: Date(),
             duration: 0,
             notes: "",

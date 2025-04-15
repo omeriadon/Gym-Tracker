@@ -22,41 +22,78 @@ struct ContentView: View {
         NavigationStack {
             ZStack {
                 GradientBackgroundView.random()
-
-                VStack {
-                    Text("Hello, \(name)")
-                        .font(.largeTitle)
-                        .padding()
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(10)
-                    
-                    Spacer()
-                        .frame(height: 40)
-
-                    if !lastThreeWorkouts.isEmpty {
-                        VStack(alignment: .leading) {
-                            Text("Last 3 Workouts")
-                                .font(.headline)
-                                .padding(.top)
-
-                            ForEach(lastThreeWorkouts, id: \.id) { workout in
-                                HStack {
-                                    Text(workout.name)
-                                        .font(.subheadline)
-                                    Spacer()
-                                    Text("\(formatDuration(workout.duration))")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                .padding(.vertical, 4)
-                            }
+                
+                if completedWorkouts.isEmpty {
+                    ContentUnavailableView {
+                        Label("No Workouts", systemImage: "dumbbell")
+                    } description: {
+                        Text("Start your fitness journey today!")
+                    } actions: {
+                        Button {
+                            // This will be handled by the tab view selection
+                        } label: {
+                            Text("Start Workout")
+                                .padding()
+                                .background(UltraThinView())
+                                .clipShape(RoundedRectangle(cornerRadius: 15))
                         }
-                        .padding()
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(10)
                     }
+                } else {
+                    VStack {
+                        Spacer()
+                            .frame(height: 15)
+                        
+                        List {
+                            Section {
+                                Text("Hello, \(name)")
+                                    .font(.title)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.vertical, 8)
+                            }
+                            .listRowBackground(UltraThinView())
+                            
+                            if !lastThreeWorkouts.isEmpty {
+                                Section {
+                                    ForEach(lastThreeWorkouts) { workout in
+                                        NavigationLink(destination: WorkoutDetailView(workout: workout)) {
+                                            VStack(alignment: .leading) {
+                                                Text(workout.name)
+                                                    .font(.headline)
+                                                HStack {
+                                                    Text(workout.date, style: .date)
+                                                    Spacer()
+                                                    Text(formatDuration(workout.duration))
+                                                        .monospacedDigit()
+                                                }
+                                                .font(.subheadline)
+                                                .foregroundStyle(.secondary)
+                                            }
+                                            .padding(.vertical, 4)
+                                        }
+                                    }
+                                } header: {
+                                    Label("Recent Workouts", systemImage: "clock.arrow.circlepath")
+                                }
+                                .listRowBackground(UltraThinView())
+                            }
+                            
+                            Section {
+                                NavigationLink {
+                                    ProgressView()
+                                } label: {
+                                    Label("View Progress", systemImage: "chart.line.uptrend.xyaxis")
+                                        .frame(height: 40)
+                                }
+                            } header: {
+                                Label("Progress", systemImage: "chart.bar")
+                            }
+                            .listRowBackground(UltraThinView())
+                        }
+                        .scrollContentBackground(.hidden)
+                    }
+                    .scrollIndicators(.hidden)
+                    .scrollBounceBehavior(.basedOnSize)
                 }
-                .padding()
             }
             .onAppear {
                 name = ContentView.getName()

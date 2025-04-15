@@ -7,7 +7,7 @@ struct ActiveWorkoutView: View {
     @State private var showingNewWorkoutSheet = false
     @State private var showingExerciseSheet = false
     @State private var showExitConfirmation = false
-    @State private var workoutName: String = "New Workout"
+    @State private var workoutName: String = ""
     @State private var workoutNotes: String = ""
     
     var body: some View {
@@ -257,7 +257,7 @@ private struct NewWorkoutSheet: View {
             VStack {
                 List {
                     Section {
-                        TextField("Workout name", text: $name)
+                        TextField("Workout name (optional)", text: $name)
                         TextField("Notes", text: $notes)
                     }
                     .listRowBackground(UltraThinView())
@@ -267,7 +267,7 @@ private struct NewWorkoutSheet: View {
                     Spacer()
                     Button {
                         WorkoutStorage.shared.setModelContext(modelContext)
-                        workoutManager.startWorkout(name: name)
+                        workoutManager.startWorkout(name: name.isEmpty ? nil : name)
                         if !notes.isEmpty {
                             workoutManager.activeWorkout?.notes = notes
                         }

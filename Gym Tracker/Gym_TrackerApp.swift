@@ -1,4 +1,4 @@
-//
+    //
     //  Gym_TrackerApp.swift
     //  Gym Tracker
     //
@@ -11,7 +11,7 @@ import ColorfulX
 
 class ObservableModelContainer: ObservableObject, Observable {
     let container: ModelContainer
-
+    
     init() {
         self.container = try! ModelContainer(for: Workout.self, ExercizeSet.self, Exercize.self, Bookmark.self)
     }
@@ -21,57 +21,62 @@ class ObservableModelContainer: ObservableObject, Observable {
 struct Gym_TrackerApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-
+    
     
     @State private var isDarkMode = UserSettings.shared.themeMode == .dark
     @StateObject private var workoutManager = WorkoutManager()
     @StateObject private var observableModelContainer = ObservableModelContainer()
-
+    
     init() {
         loadAndGroupExercizes()
     }
     
     var body: some Scene {
         WindowGroup {
-            WorkoutBannerView()
-                .environmentObject(workoutManager)
-                .environmentObject(observableModelContainer)
-                .preferredColorScheme(isDarkMode ? .dark : .light)
-
-            Spacer()
-                .frame(height: 1)
             
-            ZStack(alignment: .top) {
-                TabView {
-                    ContentView()
-                        .tabItem {
-                            Label("Home", systemImage: "house")
-                        }
-                    
-                    ActiveWorkoutView()
-                        .tabItem {
-                            Label("Workout", systemImage: "figure.run")
-                        }
-                    
-                    LibraryView()
-                        .tabItem {
-                            Label("Library", systemImage: "books.vertical")
-                        }
-                    
-                    SettingsView()
-                        .tabItem {
-                            Label("Settings", systemImage: "gear")
-                        }
+            
+            VStack {
+                WorkoutBannerView()
+                
+                
+                ZStack(alignment: .top) {
+                    TabView {
+                        ContentView()
+                            .tabItem {
+                                Label("Home", systemImage: "house")
+                            }
+                        
+                        ActiveWorkoutView()
+                            .tabItem {
+                                Label("Workout", systemImage: "figure.run")
+                            }
+                        
+                        LibraryView()
+                            .tabItem {
+                                Label("Library", systemImage: "books.vertical")
+                            }
+                        
+                        SettingsView()
+                            .tabItem {
+                                Label("Settings", systemImage: "gear")
+                            }
+                    }
+
                 }
+
             }
-            .environmentObject(workoutManager)
-            .environmentObject(observableModelContainer)
-            .environment(\.modelContext, observableModelContainer.container.mainContext)
-            .preferredColorScheme(isDarkMode ? .dark : .light)
             .onAppear {
                 setupThemeChangeListener()
             }
+            .preferredColorScheme(isDarkMode ? .dark : .light)
+            .environmentObject(workoutManager)
+            .environment(\.modelContext, observableModelContainer.container.mainContext)
+            
+            .environmentObject(observableModelContainer)
+
+
         }
+
     }
     
     func setupThemeChangeListener() {
