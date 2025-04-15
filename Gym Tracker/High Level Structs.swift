@@ -47,16 +47,16 @@ class ExercizeSet {
     var timeinterval: TimeInterval
     var hitFailure: FailureLevel
 
-    var excersize: Exercize
+    var exercize: Exercize
     
     
-    init(id: UUID, reps: Int, weight: Double, timestamp: Date, timeinterval: TimeInterval, excersize: Exercize, hitFailure: FailureLevel) {
+    init(id: UUID, reps: Int, weight: Double, timestamp: Date, timeinterval: TimeInterval, exercize: Exercize, hitFailure: FailureLevel) {
         self.id = id
         self.reps = reps
         self.weight = weight
         self.timestamp = timestamp
         self.timeinterval = timeinterval
-        self.excersize = excersize
+        self.exercize = exercize
         self.hitFailure = hitFailure
     }
 }
@@ -87,16 +87,16 @@ class Workout {
     var date: Date
     var duration: TimeInterval 
     var notes: String
-    var exerciseSets: [ExercizeSet]
+    var exercizeSets: [ExercizeSet]
     var isActive: Bool
     
-    init(id: UUID, name: String, date: Date, duration: TimeInterval, notes: String, exerciseSets: [ExercizeSet], isActive: Bool = false) {
+    init(id: UUID, name: String, date: Date, duration: TimeInterval, notes: String, exercizeSets: [ExercizeSet], isActive: Bool = false) {
         self.id = id
         self.name = name
         self.date = date
         self.duration = duration
         self.notes = notes
-        self.exerciseSets = exerciseSets
+        self.exercizeSets = exercizeSets
         self.isActive = isActive
     }
 }

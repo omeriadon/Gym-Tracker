@@ -7,9 +7,11 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
+    private var observableModelContainer = ObservableModelContainer()
     
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else {
@@ -17,13 +19,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             return
         }
         
-            // Debugging: Print the session role to check what role we are dealing with
         print("Session role: \(session.role)")
         
         if session.role == .windowExternalDisplayNonInteractive {
             print("External display connected!")
             let window = UIWindow(windowScene: windowScene)
-            window.rootViewController = UIHostingController(rootView: ExternalDisplayView()) // Display the content on the external screen
+            
+            let contentView = ExternalDisplayView()
+                .environmentObject(WorkoutManager.shared)
+                .environment(\.modelContext, observableModelContainer.container.mainContext)
+            
+            window.rootViewController = UIHostingController(rootView: contentView)
             self.window = window
             window.makeKeyAndVisible()
         } else {

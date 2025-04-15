@@ -1,4 +1,4 @@
-    //
+//
     //  Gym_TrackerApp.swift
     //  Gym Tracker
     //
@@ -13,7 +13,24 @@ class ObservableModelContainer: ObservableObject, Observable {
     let container: ModelContainer
     
     init() {
-        self.container = try! ModelContainer(for: Workout.self, ExercizeSet.self, Exercize.self, Bookmark.self)
+        let schema = Schema([
+            Workout.self,
+            ExercizeSet.self,
+            Exercize.self,
+            Bookmark.self
+        ])
+        
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false,
+            groupContainer: .identifier("group.com.omeriadon.GymTracker")
+        )
+        
+        do {
+            self.container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Could not initialize ModelContainer: \(error)")
+        }
     }
 }
 
@@ -24,7 +41,6 @@ struct Gym_TrackerApp: App {
     
     
     @State private var isDarkMode = UserSettings.shared.themeMode == .dark
-    @StateObject private var workoutManager = WorkoutManager()
     @StateObject private var observableModelContainer = ObservableModelContainer()
     
     init() {
@@ -69,7 +85,7 @@ struct Gym_TrackerApp: App {
                 setupThemeChangeListener()
             }
             .preferredColorScheme(isDarkMode ? .dark : .light)
-            .environmentObject(workoutManager)
+            .environmentObject(WorkoutManager.shared)
             .environment(\.modelContext, observableModelContainer.container.mainContext)
             
             .environmentObject(observableModelContainer)

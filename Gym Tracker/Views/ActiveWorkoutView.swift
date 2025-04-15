@@ -94,13 +94,13 @@ private struct ExerciseSetsList: View {
     
     var body: some View {
         List {
-            if !workout.exerciseSets.isEmpty {
+            if !workout.exercizeSets.isEmpty {
                 Section {
-                    ForEach(workout.exerciseSets) { set in
+                    ForEach(workout.exercizeSets) { set in
                         ExerciseSetRow(set: set, workout: workout)
                     }
                     .onDelete { indices in
-                        workout.exerciseSets.remove(atOffsets: indices)
+                        workout.exercizeSets.remove(atOffsets: indices)
                         WorkoutStorage.shared.saveWorkoutState()
                     }
                 } header: {
@@ -126,15 +126,15 @@ private struct ExerciseSetRow: View {
             Circle()
                 .fill(set.hitFailure.color)
                 .frame(width: 12, height: 12)
-            Text(set.excersize.name)
+            Text(set.exercize.name)
             Spacer()
             Text("\(set.reps) reps @ \(String(format: "%.1f", set.weight))kg")
                 .foregroundStyle(.secondary)
         }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
-                if let index = workout.exerciseSets.firstIndex(where: { $0.id == set.id }) {
-                    workout.exerciseSets.remove(at: index)
+                if let index = workout.exercizeSets.firstIndex(where: { $0.id == set.id }) {
+                    workout.exercizeSets.remove(at: index)
                     WorkoutStorage.shared.saveWorkoutState()
                 }
             } label: {
@@ -158,10 +158,10 @@ private struct ExerciseSetRow: View {
                     weight: set.weight,
                     timestamp: Date(),
                     timeinterval: Date().timeIntervalSince(workout.date),
-                    excersize: set.excersize,
+                    exercize: set.exercize,
                     hitFailure: set.hitFailure
                 )
-                workout.exerciseSets.append(newSet)
+                workout.exercizeSets.append(newSet)
                 WorkoutStorage.shared.saveWorkoutState()
             } label: {
                 Label("Duplicate", systemImage: "plus.square.on.square")
@@ -281,7 +281,16 @@ private struct NewWorkoutSheet: View {
                 }
                 .frame(maxHeight: .infinity, alignment: .bottom)
             }
-
+            .toolbar {
+                Button {
+                    isPresented = false
+                } label: {
+                    Label("End Workout", systemImage: "xmark.circle.fill")
+                        .padding()
+                        .background { UltraThinView() }
+                        .clipShape(RoundedRectangle(cornerRadius: 15))
+                }
+            }
             .padding()
             .navigationTitle("New Workout")
         }

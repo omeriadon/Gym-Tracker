@@ -4,11 +4,13 @@ import SwiftUI
 import SwiftData
 
 class WorkoutManager: ObservableObject {
+    static let shared = WorkoutManager()
+    
     @Published var activeWorkout: Workout?
     @Published var workoutStartTime: Date?
-    private var appTimer: Timer?
-    private var liveActivityTimer: Timer?
-    private var liveActivity: Activity<WorkoutAttributes>?
+    var appTimer: Timer?
+    var liveActivityTimer: Timer?
+    var liveActivity: Activity<WorkoutAttributes>?
     
     init() {
         // Check if there's an active workout when initializing
@@ -23,7 +25,7 @@ class WorkoutManager: ObservableObject {
         }
     }
     
-    private func getDefaultWorkoutName() -> String {
+    func getDefaultWorkoutName() -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
@@ -42,7 +44,7 @@ class WorkoutManager: ObservableObject {
             date: Date(),
             duration: 0,
             notes: "",
-            exerciseSets: [],
+            exercizeSets: [],
             isActive: true
         )
         
@@ -162,8 +164,8 @@ class WorkoutManager: ObservableObject {
         
         let state = WorkoutAttributes.ContentState(
             duration: duration,
-            currentExerciseName: workout.exerciseSets.last?.excersize.name,
-            setCount: workout.exerciseSets.count,
+            currentExerciseName: workout.exercizeSets.last?.exercize.name,
+            setCount: workout.exercizeSets.count,
             status: "In Progress"
         )
         
@@ -179,7 +181,7 @@ class WorkoutManager: ObservableObject {
         let finalState = WorkoutAttributes.ContentState(
             duration: workout.duration,
             currentExerciseName: nil,
-            setCount: workout.exerciseSets.count,
+            setCount: workout.exercizeSets.count,
             status: "Completed"
         )
         

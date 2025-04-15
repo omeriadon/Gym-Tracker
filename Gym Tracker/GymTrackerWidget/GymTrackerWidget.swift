@@ -6,6 +6,7 @@ import SwiftUI
 struct GymTrackerWidgets: WidgetBundle {
     var body: some Widget {
         WorkoutActivityConfiguration()
+        HomeScreenWidget()
     }
 }
 

@@ -55,22 +55,22 @@ struct WorkoutDetailView: View {
                         }
                         .listRowBackground(UltraThinView())
 
-                        if !workout.exerciseSets.isEmpty {
+                        if !workout.exercizeSets.isEmpty {
                             Section {
-                                ForEach(workout.exerciseSets) { set in
+                                ForEach(workout.exercizeSets) { set in
                                     HStack {
                                         Circle()
                                             .fill(set.hitFailure.color)
                                             .frame(width: 12, height: 12)
-                                        Text(set.excersize.name)
+                                        Text(set.exercize.name)
                                         Spacer()
                                         Text("\(set.reps) reps @ \(String(format: "%.1f", set.weight))kg")
                                             .foregroundStyle(.secondary)
                                     }
                                     .swipeActions(edge: .trailing) {
                                         Button(role: .destructive) {
-                                            if let index = workout.exerciseSets.firstIndex(where: { $0.id == set.id }) {
-                                                workout.exerciseSets.remove(at: index)
+                                            if let index = workout.exercizeSets.firstIndex(where: { $0.id == set.id }) {
+                                                workout.exercizeSets.remove(at: index)
                                                 try? modelContext.save()
                                             }
                                         } label: {
@@ -90,7 +90,7 @@ struct WorkoutDetailView: View {
                                 }
                                 .onDelete { indices in
                                     indices.forEach { index in
-                                        workout.exerciseSets.remove(at: index)
+                                        workout.exercizeSets.remove(at: index)
                                     }
                                     try? modelContext.save()
                                 }
@@ -250,5 +250,5 @@ struct WorkoutDetailView: View {
 }
 
 #Preview {
-    WorkoutDetailView(workout: Workout(id: UUID(), name: "name", date: Date.now, duration: 46, notes: "notes", exerciseSets: []))
+    WorkoutDetailView(workout: Workout(id: UUID(), name: "name", date: Date.now, duration: 46, notes: "notes", exercizeSets: []))
 }

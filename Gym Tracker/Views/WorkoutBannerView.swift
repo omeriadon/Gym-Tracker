@@ -39,7 +39,7 @@ struct WorkoutBannerView: View {
                             .tint(.red)
                         }
                         
-                        if let currentExercise = workout.exerciseSets.last?.excersize.name {
+                        if let currentExercise = workout.exercizeSets.last?.exercize.name {
                             Text(currentExercise)
                                 .font(.subheadline)
                                 .foregroundStyle(.white.opacity(0.8))

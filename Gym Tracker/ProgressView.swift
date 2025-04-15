@@ -21,11 +21,11 @@ struct ProgressView: View {
     }
     
     var totalExercises: Int {
-        completedWorkouts.reduce(0) { $0 + $1.exerciseSets.count }
+        completedWorkouts.reduce(0) { $0 + $1.exercizeSets.count }
     }
     
     var totalWeight: Double {
-        completedWorkouts.reduce(0) { $0 + $1.exerciseSets.reduce(0) { $0 + ($1.weight * Double($1.reps)) } }
+        completedWorkouts.reduce(0) { $0 + $1.exercizeSets.reduce(0) { $0 + ($1.weight * Double($1.reps)) } }
     }
     
     var averageWorkoutDuration: TimeInterval? {
@@ -35,14 +35,14 @@ struct ProgressView: View {
     }
     
     var mostFrequentExercise: (name: String, count: Int)? {
-        let exercises = completedWorkouts.flatMap { $0.exerciseSets.map { $0.excersize.name } }
+        let exercises = completedWorkouts.flatMap { $0.exercizeSets.map { $0.exercize.name } }
         let counted = Dictionary(grouping: exercises, by: { $0 }).mapValues { $0.count }
         return counted.max(by: { $0.value < $1.value }).map { ($0.key, $0.value) }
     }
     
     // New computed properties
     var mostUsedMuscleGroup: (name: String, count: Int)? {
-        let groups = completedWorkouts.flatMap { $0.exerciseSets.map { $0.excersize.group } }
+        let groups = completedWorkouts.flatMap { $0.exercizeSets.map { $0.exercize.group } }
         let counted = Dictionary(grouping: groups, by: { $0 }).mapValues { $0.count }
         return counted.max(by: { $0.value < $1.value }).map { ($0.key, $0.value) }
     }
@@ -54,7 +54,7 @@ struct ProgressView: View {
     
     var totalFailureSets: Int {
         completedWorkouts.reduce(0) { total, workout in
-            total + workout.exerciseSets.filter { $0.hitFailure == .completeFailure }.count
+            total + workout.exercizeSets.filter { $0.hitFailure == .completeFailure }.count
         }
     }
     

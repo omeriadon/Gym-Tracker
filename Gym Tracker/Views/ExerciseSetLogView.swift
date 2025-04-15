@@ -58,7 +58,7 @@ struct ExerciseSetLogView: View {
                 weight: weightDouble,
                 timestamp: Date(),
                 timeinterval: Date().timeIntervalSince(workout.date),
-                excersize: exercise,
+                exercize: exercise,
                 hitFailure: failureLevel
             )
             

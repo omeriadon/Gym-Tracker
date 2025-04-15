@@ -23,7 +23,7 @@ struct ExerciseAddView: View {
                     exercise: selectedExercise!,
                     onSave: { set in
                         if let workout = workoutManager.activeWorkout {
-                            workout.exerciseSets.append(set)
+                            workout.exercizeSets.append(set)
                             WorkoutStorage.shared.saveWorkoutState()
                             showingExerciseSheet = false
                         }
@@ -80,8 +80,8 @@ private struct ExerciseSelectionView: View {
     var body: some View {
         List {
             if let workout = workoutManager.activeWorkout {
-                let groupedSets = Dictionary(grouping: workout.exerciseSets) { $0.excersize.name }
-                if !workout.exerciseSets.isEmpty {
+                let groupedSets = Dictionary(grouping: workout.exercizeSets) { $0.exercize.name }
+                if !workout.exercizeSets.isEmpty {
                     Section {
                         ForEach(Array(groupedSets.keys).sorted(), id: \.self) { exerciseName in
                             if let sets = groupedSets[exerciseName] {
@@ -148,10 +148,10 @@ private struct QuickAddSetButton: View {
                 weight: set.weight,
                 timestamp: Date(),
                 timeinterval: Date().timeIntervalSince(workoutManager.activeWorkout!.date),
-                excersize: set.excersize,
+                exercize: set.exercize,
                 hitFailure: set.hitFailure
             )
-            workoutManager.activeWorkout!.exerciseSets.append(newSet)
+            workoutManager.activeWorkout!.exercizeSets.append(newSet)
             WorkoutStorage.shared.saveWorkoutState()
         } label: {
             HStack {
